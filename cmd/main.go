@@ -5,6 +5,7 @@ import (
 	"go/projcet-Adv/configs"
 	"go/projcet-Adv/internal/auth"
 	"go/projcet-Adv/internal/link"
+	"go/projcet-Adv/internal/users"
 	"go/projcet-Adv/pkg/db"
 	"go/projcet-Adv/pkg/middleware"
 	"net/http"
@@ -17,9 +18,14 @@ func main() {
 
 	//Repositoires
 	linkRepository := link.NewLinkRepository(db)
+	userRepository := users.NewUserRepository(db)
+
+	//Services
+	authService := auth.NewAuthService(userRepository)
 	//Handler
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
-		Config: conf,
+		Config:      conf,
+		AuthService: authService,
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
