@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"fmt"
 	"go/projcet-Adv/configs"
+	"go/projcet-Adv/pkg/jwt"
 	"go/projcet-Adv/pkg/request"
 	"go/projcet-Adv/pkg/response"
 	"net/http"
@@ -34,10 +34,18 @@ func (handler *AuthHandler) Login() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-
-		fmt.Println(body)
+		email, err := handler.AuthService.Login(body.Email, body.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		res := LoginResponse{
-			Token: "123",
+			Token: token,
 		}
 		response.Json(w, res, 200)
 	}
@@ -49,6 +57,19 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		handler.AuthService.Register(body.Email, body.Password, body.Name)
+		email, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		token, err := jwt.NewJWT(handler.Config.Auth.Secret).Create(email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data := RegisterResoponse{
+			Token: token,
+		}
+		response.Json(w, data, 200)
 	}
 }
