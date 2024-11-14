@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"go/projcet-Adv/configs"
 	"go/projcet-Adv/internal/auth"
@@ -9,7 +10,21 @@ import (
 	"go/projcet-Adv/pkg/db"
 	"go/projcet-Adv/pkg/middleware"
 	"net/http"
+	"time"
 )
+
+func tickOperation(ctx context.Context) {
+	ticker := time.NewTicker(200 * time.Millisecond)
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("Tick")
+		case <-ctx.Done():
+			fmt.Println("Cancel")
+			return
+		}
+	}
+}
 
 func main() {
 	conf := configs.LoadConfig()
@@ -29,6 +44,7 @@ func main() {
 	})
 	link.NewLinkHandler(router, link.LinkHandlerDeps{
 		LinkRepository: linkRepository,
+		Config:         conf,
 	})
 
 	// Middlewares
