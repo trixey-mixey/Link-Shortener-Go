@@ -2,6 +2,7 @@ package main
 
 import (
 	"go/projcet-Adv/internal/link"
+	"go/projcet-Adv/internal/stat"
 	"go/projcet-Adv/internal/users"
 	"os"
 
@@ -17,8 +18,9 @@ func main() {
 	}
 
 	db, err := gorm.Open(postgres.Open(os.Getenv("DSN")), &gorm.Config{})
+
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&link.Link{}, &users.User{})
+	db.AutoMigrate(&link.Link{}, &users.User{}, &stat.Stat{})
 }
