@@ -3,6 +3,7 @@ package link
 import (
 	"fmt"
 	"go/projcet-Adv/configs"
+	"go/projcet-Adv/pkg/event"
 	"go/projcet-Adv/pkg/middleware"
 	"go/projcet-Adv/pkg/request"
 	"go/projcet-Adv/pkg/response"
@@ -15,15 +16,18 @@ import (
 type LinkHandlerDeps struct {
 	LinkRepository *LinkRepository
 	Config         *configs.Config
+	EventBus       *event.EventBus
 }
 
 type LinkHandler struct {
 	LinkRepository *LinkRepository
+	EventBus       *event.EventBus
 }
 
 func NewLinkHandler(router *http.ServeMux, deps LinkHandlerDeps) {
 	handler := &LinkHandler{
 		LinkRepository: deps.LinkRepository,
+		EventBus:       deps.EventBus,
 	}
 	router.HandleFunc("POST /link", handler.Create())
 	router.Handle("PATCH /link/{id}", middleware.IsAuthed(handler.Update(), deps.Config))
@@ -65,6 +69,11 @@ func (handler *LinkHandler) GoTo() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+		//handler.StatRepository.AddClick(link.ID)
+		go handler.EventBus.Publish(event.Event{
+			Type: event.EventLinkVisited,
+			Data: link.ID,
+		})
 		http.Redirect(w, req, link.Url, http.StatusTemporaryRedirect)
 
 	}
